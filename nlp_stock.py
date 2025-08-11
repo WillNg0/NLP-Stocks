@@ -64,6 +64,8 @@ event = []
 person = []
 company = []
 org = []
+stock = []
+index = []
 
 for ent in doc.ents:
     #if ent == "EVENT"
@@ -73,11 +75,17 @@ for ent in doc.ents:
         company.append(ent.text)
     if ent.label_ == "ORG" and ent.text not in org:
         org.append(ent.text)
+    if ent.label_ == "STOCK" and ent.text not in stock:
+        org.append(ent.text)
+    if ent.label_ == "INDEX" and ent.text not in index:
+        org.append(ent.text)
+        
             
 print("relevant people: " + ', '.join(person))
 print("relevant companies: " + ', '.join(company))
 print("relevant organizations: " + ', '.join(org))
-
+print("relevant stocks: " + ', '.join(stock))
+print("relevant indexes: " + ', '.join(index))
 
 
 model = 'facebook/bart-large-cnn'
