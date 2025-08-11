@@ -1,0 +1,3 @@
+text = "Borsa Italiana S.P.A. 123"
+
+print(text.lower())

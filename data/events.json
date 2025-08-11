@@ -1,0 +1,48 @@
+
+{
+    "Aquisitions & Mergers": [
+        "aquisition", "merger", "takeover", "buyout", "purchase", "consolidation", "merger-of-equals", "agrees to acquire", 
+        "announces acquisition of", "plans to merge with", "to be bought by", "takes over", "finalizes merger with", 
+        "acquires controlling stake in"
+    ],
+    "Lawsuits & Legal Actions": [
+        "lawsuit", "litigation", "class action", "settlement", "legal dispute", "injunction", "subpoena", "files suit against", 
+        "faces legal action","files suit against", "faces legal action", "under investigation by", "sued for", 
+        "reaches settlement with", "accused of", "alleges misconduct by"
+    ],
+    "Earnings & Financial Reports": [
+        "earnings", "revenue", "profit", "loss", "EPS", "guidance", "forecast", "reports quarterly earnings",
+        "misses expectations", "beats earnings forecast", "raises full-year guidance", "posts record revenue", "projects lower earnings"
+    ],
+    "Leadership Changes" : [
+        "resignation", "appointment", "promotion", "succession", "appoints new CEO", "CEO steps down", 
+        "announces leadership change", "names new chief financial officer", "executive departure"
+    ],
+    "Product Launches & Innovations": [
+        "launch", "rollout", "release", "debut", "unveil", "prototype", "announces new product", 
+        "rolls out service", "unveils prototype of", "introduces upgraded version", "releases new model"
+    ],
+    "Partnerships & Contracts": [
+        "partnership", "alliance", "agreement", "contract", "collaboration", "joint venture",
+        "enters into agreement with", "partners with", "signs multi-year deal with", "forms joint venture"
+    ],
+    "Regulatory & Policy Changes": [
+        "regulation", "compliance", "approval", "ban", "fine", "sanction",
+        "receives FDA approval", "SEC investigation", "faces regulatory hurdles", "granted license", "hit with fine from"
+    ],
+    "Bankruptcy & Restructuring": [
+        "bankruptcy", "restructuring", "insolvency", "liquidation", "debt relief", "reorganization",
+        "files for Chapter 11", "announces restructuring plan", "emerges from bankruptcy", "defaults on debt"
+    ],
+    "Tariffs": ["tariff", "tariffs", "import duty", "export duty", "trade duty", "trade tax", "levy", "imposes tariff",
+        "slaps tariff", "raises tariffs", "cuts tariffs", "removes tariffs", "import restriction", "export restriction",
+        "trade barrier", "customs duty", "duty on imports", "duty on exports", "trade penalty", "protectionist measure"
+    ],
+    "Inflation": ["inflation", "inflation rate", "rising prices", "price increases", "price hike", "cost of living", "surge in prices",
+        "increase in costs", "wage inflation", "consumer prices", "producer prices", "CPI", "consumer price index", "PPI", 
+        "producer price index", "hyperinflation", "stagflation", "runaway inflation", "spike in prices", "price surge", 
+        "inflationary pressure", "core inflation", "headline inflation"
+  ]
+
+}
+

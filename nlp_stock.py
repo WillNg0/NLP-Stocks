@@ -1,66 +1,124 @@
 import spacy
 import pandas as pd
+import requests
+from bs4 import BeautifulSoup as bs
+import json
+from transformers import BartForConditionalGeneration, BartTokenizer
+import torch
 
-df = pd.read_csv("stocks.tsv", sep="\t")
-
-#list of symbols
+df = pd.read_csv("data/stocks.tsv", sep="\t")
+#list of symbols and companies
 symbols = df.Symbol.tolist()
 companies = df.CompanyName.tolist()
-print(symbols[:10])
 
-#create a blank model
-nlp = spacy.blank("en")
-ruler = nlp.add_pipe("entity_ruler")
+df2 = pd.read_csv("data/indexes.tsv", sep="\t")
+#list of stock indexes
+indexes = df2.IndexName.tolist()
+index_symbols = df2.IndexSymbol.tolist()
+
+df3 = pd.read_csv("data/stock_exchanges.tsv", sep="\t")
+exchanges = df3.ISOMIC.tolist() + df3["Google Prefix"].tolist() + df3.Description.tolist()
+
+stops = [] 
+nlp = spacy.load("en_core_web_sm")
+ruler = nlp.add_pipe("entity_ruler", before="ner")
 patterns = []
+
+letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 for symbol in symbols:
-    patterns.append({"label": "STOCK", "pattern": symbol}) #adds a custom named pattern to "patterns"
-                      #"label" is the entity type to assign 
+    stops.append(symbol.lower())
+    patterns.append({"label": "STOCK", "pattern": symbol})
+    for l in letters:
+        patterns.append({"label": "STOCK", "pattern": symbol + f".{l}"})
+        #look for any instance where there is a symbol followed by a period and letters
 for company in companies:
-    patterns.append({"label": "COMPANY", "pattern": company})
+    stops.append(company.lower())
+    if company not in stops:
+        patterns.append({"label": "COMPANY", "pattern": company})
+for index in indexes:
+    stops.append(index.lower())
+    patterns.append({"label": "INDEX", "pattern": index})
+    words = index.split()
+    patterns.append({"label": "INDEX", "pattern": " ".join(words[:2])}) #hard coded to identify S&P 500 as index
+    patterns.append({"label": "INDEX", "pattern": " ".join(words[:1])})
+for index_symbol in index_symbols:
+     stops.append(index_symbol.lower())
+     patterns.append({"label": "INDEX", "pattern": index})
+for e in exchanges:
+    if pd.isna(e): #check if exchange is NaN
+        continue
+    stops.append(e.lower())
+    patterns.append({"label": "STOCK_EXCHANGE", "pattern": e})
 ruler.add_patterns(patterns)
+#add pattern to entity ruler
 
-#source: https://www.reuters.com/business/futures-rise-after-biden-xi-call-oil-bounce-2021-09-10/
-text = '''
-Sept 10 (Reuters) - Wall Street's main indexes were subdued on Friday as signs of higher inflation and a drop in Apple shares following an unfavorable court ruling offset expectations of an easing in U.S.-China tensions.
+url = "https://www.goldmansachs.com/insights/articles/how-us-fiscal-concerns-are-affecting-bonds-currencies-stocks"
+page = requests.get(url)
+text = bs(page.text, "html.parser")
+doc = nlp(text.text)
 
-Data earlier in the day showed U.S. producer prices rose solidly in August, leading to the biggest annual gain in nearly 11 years and indicating that high inflation was likely to persist as the pandemic pressures supply chains. read more .
+sents = list(doc.sents)
+doc_length = len(sents)
 
-"Today's data on wholesale prices should be eye-opening for the Federal Reserve, as inflation pressures still don't appear to be easing and will likely continue to be felt by the consumer in the coming months," said Charlie Ripley, senior investment strategist for Allianz Investment Management.
+event = []
+person = []
+company = []
+org = []
 
-Apple Inc (AAPL.O) fell 2.7% following a U.S. court ruling in "Fortnite" creator Epic Games' antitrust lawsuit that stroke down some of the iPhone maker's restrictions on how developers can collect payments in apps.
-
-
-Sponsored by Advertising Partner
-Sponsored Video
-Watch to learn more
-Report ad
-Apple shares were set for their worst single-day fall since May this year, weighing on the Nasdaq (.IXIC) and the S&P 500 technology sub-index (.SPLRCT), which fell 0.1%.
-
-Sentiment also took a hit from Cleveland Federal Reserve Bank President Loretta Mester's comments that she would still like the central bank to begin tapering asset purchases this year despite the weak August jobs report. read more
-
-Investors have paid keen attention to the labor market and data hinting towards higher inflation recently for hints on a timeline for the Federal Reserve to begin tapering its massive bond-buying program.
-
-The S&P 500 has risen around 19% so far this year on support from dovish central bank policies and re-opening optimism, but concerns over rising coronavirus infections and accelerating inflation have lately stalled its advance.
-
-
-Report ad
-The three main U.S. indexes got some support on Friday from news of a phone call between U.S. President Joe Biden and Chinese leader Xi Jinping that was taken as a positive sign which could bring a thaw in ties between the world's two most important trading partners.
-
-At 1:01 p.m. ET, the Dow Jones Industrial Average (.DJI) was up 12.24 points, or 0.04%, at 34,891.62, the S&P 500 (.SPX) was up 2.83 points, or 0.06%, at 4,496.11, and the Nasdaq Composite (.IXIC) was up 12.85 points, or 0.08%, at 15,261.11.
-
-Six of the eleven S&P 500 sub-indexes gained, with energy (.SPNY), materials (.SPLRCM) and consumer discretionary stocks (.SPLRCD) rising the most.
-
-U.S.-listed Chinese e-commerce companies Alibaba and JD.com , music streaming company Tencent Music (TME.N) and electric car maker Nio Inc (NIO.N) all gained between 0.7% and 1.4%
-
-
-Report ad
-Grocer Kroger Co (KR.N) dropped 7.1% after it said global supply chain disruptions, freight costs, discounts and wastage would hit its profit margins.
-
-Advancing issues outnumbered decliners by a 1.12-to-1 ratio on the NYSE and by a 1.02-to-1 ratio on the Nasdaq.
-
-The S&P index recorded 14 new 52-week highs and three new lows, while the Nasdaq recorded 49 new highs and 38 new lows.
-'''
-
-doc = nlp(text)
 for ent in doc.ents:
-    print(ent.text, ent.label_)
+    #if ent == "EVENT"
+    if ent.label_ == "PERSON" and ent.text not in person:
+        person.append(ent.text)
+    if ent.label_ == "COMPANY" and ent.text not in company:
+        company.append(ent.text)
+    if ent.label_ == "ORG" and ent.text not in org:
+        org.append(ent.text)
+            
+print("relevant people: " + ', '.join(person))
+print("relevant companies: " + ', '.join(company))
+print("relevant organizations: " + ', '.join(org))
+
+
+
+model = 'facebook/bart-large-cnn'
+transformer = BartForConditionalGeneration.from_pretrained(model)
+tokenizer = BartTokenizer.from_pretrained(model)
+
+final_text = ""
+
+#marks text as important
+for s in sents:
+    if any(s.ents in symbols or indexes or exchanges or ent.label_ == "PERCENTAGE"):
+        final_text += (f"[IMPORTANT] {s}")
+    else: 
+        final_text += s 
+#bypass token limit by splitting up the tokens
+
+#1: chunk up the large text into smaller token chunks -> use a list to store the chunks to iterate (easy and simple ds to use)
+#2: loop through each chunk and append each iteration into some variable of final_message
+
+#1
+tokens = tokenizer.encode(final_text) #create a list of tokens from the text
+chunk_tokens = []
+for i in range(0, len(tokens), 1024): #1024 is the max amount of tokens the BART model can take
+    chunk_tokens.append(tokens[i:i+1024])
+
+#2
+final_summary = ""
+for chunk in chunk_tokens:
+    inputs = {'input_ids': torch.tensor([chunk])}
+
+    summary_ids = transformer.generate(
+        inputs['input_ids'], min_length=40, num_beams=4, early_stopping=True
+    )
+
+    final_summary += tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+print("\nSummary: " + final_summary)
+
+#debug
+# from spacy import displacy
+# doc = nlp(text.text)
+# print(displacy.render(doc, style="ent", page="true"))
+
+
